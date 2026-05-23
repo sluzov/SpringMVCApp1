@@ -5,28 +5,26 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import ru.alishev.springcourse.dao.PersonDao;
 import ru.alishev.springcourse.models.Person;
-import ru.alishev.springcourse.util.PersonValidator;
+import ru.alishev.springcourse.services.PeopleService;
 
 import javax.validation.Valid;
 
 @Controller
 @RequestMapping("/people")
 public class PeopleController {
-    private final PersonDao personDao;
-    private final PersonValidator personValidator;
+
+    private final PeopleService peopleService;
 
     @Autowired
-    public PeopleController(PersonDao personDao, PersonValidator personValidator) {
-        this.personDao = personDao;
-        this.personValidator = personValidator;
+    public PeopleController(PeopleService peopleService, PeopleService peopleService1) {
+        this.peopleService = peopleService1;
     }
 
     @GetMapping()
     public String index(Model model) {
         //Получаем всех людей из DAO и передадим на views
-        model.addAttribute("people", personDao.index());
+        model.addAttribute("people", peopleService.findAll());
         return "people/index";
     }
 
@@ -34,7 +32,7 @@ public class PeopleController {
     public String show(@PathVariable("id") int id,
                        Model model) {
         //Получаем одного человека по его id из DAO и передадим на views
-        model.addAttribute("person", personDao.show(id));
+        model.addAttribute("person", peopleService.findOne(id));
         return "people/show";
     }
 
@@ -45,37 +43,33 @@ public class PeopleController {
 
     @PostMapping
     public String create(@ModelAttribute("person") @Valid Person person, BindingResult bindingResult) {
-        // Ошибки с полей попадают в bindingResult
-        personValidator.validate(person, bindingResult);
 
         if (bindingResult.hasErrors()) {
             return "people/new";
         }
-        personDao.save(person);
+        peopleService.save(person);
         return "redirect:/people";
     }
 
     @GetMapping("/{id}/edit")
     public String edit(Model model, @PathVariable("id") int id) {
-        model.addAttribute("person", personDao.show(id));
+        model.addAttribute("person", peopleService.findOne(id));
         return "people/edit";
     }
 
     @PatchMapping("/{id}")
     public String update(@ModelAttribute("person") @Valid Person person, BindingResult bindingResult, @PathVariable("id") int id) {
-        // Ошибки с полей попадают в bindingResult
-        personValidator.validate(person, bindingResult);
 
         if (bindingResult.hasErrors()) {
             return "people/edit";
         }
-        personDao.update(id, person);
+        peopleService.update(id, person);
         return "redirect:/people";
     }
 
     @DeleteMapping("/{id}")
     public String delete(@PathVariable("id") int id) {
-        personDao.delete(id);
+        peopleService.delete(id);
         return "redirect:/people";
     }
 
